@@ -61,4 +61,5 @@ object MatterConstants {
   // Well known cluster attributes
   data class ClusterAttribute(val clusterId: Long, val attributeId: Long)
   val OnOffAttribute = ClusterAttribute(6L, 0L)
+  val LevelAttribute = ClusterAttribute(8L, 0L)
 }

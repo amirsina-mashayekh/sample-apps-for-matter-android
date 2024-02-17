@@ -3,7 +3,7 @@
 [versions]
 androidxActivityCompose = "1.8.2"
 androidxComposeBom = "2023.10.01"
-androidGradlePlugin = "8.2.0"
+androidGradlePlugin = "8.2.2"
 androidx-junit = "1.1.5"
 appcompat = "1.6.1"
 code-scanner = "16.0.0"

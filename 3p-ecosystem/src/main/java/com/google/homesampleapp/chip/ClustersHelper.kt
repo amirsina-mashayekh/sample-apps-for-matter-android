@@ -564,6 +564,72 @@ class ClustersHelper @Inject constructor(private val chipClient: ChipClient) {
     return ChipClusters.OnOffCluster(devicePtr, endpoint)
   }
 
+    // -----------------------------------------------------------------------------------------------
+    // LevelControlCluster functions
+
+    suspend fun setLevelDeviceStateLevelControlCluster(deviceId: Long, level: Int, endpoint: Int) {
+        Timber.d(
+            "setLevelDeviceStateLevelControlCluster() [${deviceId}] level [${level}] endpoint [${endpoint}]")
+        val connectedDevicePtr =
+            try {
+                chipClient.getConnectedDevicePointer(deviceId)
+            } catch (e: IllegalStateException) {
+                Timber.e("Can't get connectedDevicePointer.")
+                return
+            }
+        return suspendCoroutine { continuation ->
+            getLevelControlClusterForDevice(connectedDevicePtr, endpoint)
+                .moveToLevel(
+                    object : ChipClusters.DefaultClusterCallback {
+                        override fun onSuccess() {
+                            Timber.d("Success for setLevelDeviceStateLevelControlCluster")
+                            continuation.resume(Unit)
+                        }
+
+                        override fun onError(ex: Exception) {
+                            Timber.e(ex, "Failure for setLevelDeviceStateLevelControlCluster")
+                            continuation.resumeWithException(ex)
+                        }
+                    },
+                    level,
+                    0,
+                    0,
+                    0
+                )
+        }
+    }
+
+    suspend fun getDeviceStateLevelControlCluster(deviceId: Long, endpoint: Int): Int? {
+        Timber.d("getDeviceStateLevelControlCluster())")
+        val connectedDevicePtr =
+            try {
+                chipClient.getConnectedDevicePointer(deviceId)
+            } catch (e: IllegalStateException) {
+                Timber.e("Can't get connectedDevicePointer.")
+                return null
+            }
+        return suspendCoroutine { continuation ->
+            getLevelControlClusterForDevice(connectedDevicePtr, endpoint)
+                .readCurrentLevelAttribute(
+                    object : ChipClusters.LevelControlCluster.CurrentLevelAttributeCallback {
+                        override fun onSuccess(value: Int?) {
+                            Timber.d("readLevelControlAttribute success: [$value]")
+                            continuation.resume(value)
+                        }
+
+                        override fun onError(ex: Exception) {
+                            Timber.e(ex, "readLevelControlAttribute command failure")
+                            continuation.resumeWithException(ex)
+                        }
+                    }
+                )
+        }
+    }
+
+    private fun getLevelControlClusterForDevice(devicePtr: Long, endpoint: Int): ChipClusters.LevelControlCluster {
+        return ChipClusters.LevelControlCluster(devicePtr, endpoint)
+    }
+
   // -----------------------------------------------------------------------------------------------
   // Administrator Commissioning Cluster (11.19)
 
