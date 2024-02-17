@@ -315,8 +315,8 @@ private fun DeviceScreen(
         }
       brightness =
         when (deviceState) {
-          null -> model.level / 255f
-          else -> deviceState.level / 255f
+          null -> model.level / 254f
+          else -> deviceState.level / 254f
         }
     }
     Timber.d("deviceState: isOnline [$isOnline] isOn[$isOn]")
@@ -335,8 +335,8 @@ private fun DeviceScreen(
       OnOffStateSection(isOnline, isOn) { onOnOffClick(it) }
       BrightnessControl(
         brightness,
-        {model.level = (it * 255f).toInt()},
-        {onBrightnessChange(model.level)}
+        { brightness = it },
+        { onBrightnessChange((brightness * 254).toInt()) }
       )
       ShareSection(name = model.device.name, onShareDevice)
       // TODO: Use HorizontalDivider when it becomes part of the stable Compose BOM.
