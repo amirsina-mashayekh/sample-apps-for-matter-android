@@ -332,11 +332,21 @@ private fun DeviceScreen(
 
   deviceUiModel.let { model ->
     Column(modifier = Modifier.fillMaxWidth().padding(innerPadding)) {
-      OnOffStateSection(isOnline, isOn) { onOnOffClick(it) }
-      BrightnessControl(
+      OnOffStateSection(isOnline, isOn) {
+        onOnOffClick(it)
+        model.isOn = it
+      }
+      LevelControl(
+        stringResource(R.string.brightness),
+        isOnline,
+        isOn,
         brightness,
         { brightness = it },
-        { onBrightnessChange((brightness * 254).toInt()) }
+        {
+          val brightnessVal = (brightness * 254).toInt()
+          onBrightnessChange(brightnessVal)
+          model.level = brightnessVal
+        }
       )
       ShareSection(name = model.device.name, onShareDevice)
       // TODO: Use HorizontalDivider when it becomes part of the stable Compose BOM.
@@ -379,31 +389,33 @@ private fun OnOffStateSection(
 }
 
 @Composable
-private fun BrightnessControl(
-  brightness: Float,
+private fun LevelControl(
+  title: String,
+  isOnline: Boolean,
+  isOn: Boolean,
+  level: Float,
   onStateChange: (Float) -> Unit,
   onValueChangeFinished: () -> Unit,
 ) {
   Surface(
     modifier = Modifier.padding(dimensionResource(R.dimen.margin_normal)),
     border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
-    shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner))
+    shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner)),
   ) {
     Column (
       modifier = Modifier
         .padding(dimensionResource(R.dimen.padding_surface_content))
     ) {
-      Text(
-        text = stringResource(R.string.brightness)
-      )
+      Text(text = title)
       Slider(
-        value = brightness,
+        enabled = isOnline && isOn,
+        value = level,
         onValueChange = onStateChange,
         onValueChangeFinished = onValueChangeFinished,
         valueRange = 0f..1f,
       )
       Text(
-        (brightness * 100).toInt().toString(),
+        (level * 100).toInt().toString(),
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth()
       )
@@ -615,8 +627,11 @@ private fun OnOffStateSection_OnlineOn() {
 @Composable
 private fun BrightnessControl_50() {
   MaterialTheme {
-    BrightnessControl(
-      brightness = 0.45f,
+    LevelControl(
+      title = stringResource(R.string.brightness),
+      isOnline = true,
+      isOn = true,
+      level = 0.45f,
       onStateChange = { Timber.d("Brightness changed to $it") },
       onValueChangeFinished = { Timber.d("Brightness change finished") }
     )
