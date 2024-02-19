@@ -394,7 +394,7 @@ private fun DeviceItem(
         Text(text = text, style = MaterialTheme.typography.bodyLarge)
       }
       Spacer(Modifier.weight(1f))
-      Switch(checked = isOn, onCheckedChange = onCheckedChange)
+      Switch(enabled = isOnline, checked = isOn, onCheckedChange = onCheckedChange)
     }
   }
 }

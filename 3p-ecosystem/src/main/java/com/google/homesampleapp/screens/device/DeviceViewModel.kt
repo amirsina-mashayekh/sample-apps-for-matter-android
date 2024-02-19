@@ -32,6 +32,7 @@ import com.google.homesampleapp.chip.ChipClient
 import com.google.homesampleapp.chip.ClustersHelper
 import com.google.homesampleapp.chip.MatterConstants.OnOffAttribute
 import com.google.homesampleapp.chip.MatterConstants.LevelAttribute
+import com.google.homesampleapp.chip.MatterConstants.ColorTemperatureAttribute
 import com.google.homesampleapp.chip.SubscriptionHelper
 import com.google.homesampleapp.data.DevicesRepository
 import com.google.homesampleapp.data.DevicesStateRepository
@@ -455,7 +456,7 @@ constructor(
           val levelState =
             subscriptionHelper.extractAttribute(nodeState, 1, LevelAttribute) as Int?
           val colorTemperatureState =
-            subscriptionHelper.extractAttribute(nodeState, 1, LevelAttribute) as Int?
+            subscriptionHelper.extractAttribute(nodeState, 1, ColorTemperatureAttribute) as Int?
           Timber.d("onOffState [${onOffState}]")
           if (onOffState == null) {
             Timber.e("onReport(): WARNING -> onOffState is NULL. Ignoring.")
