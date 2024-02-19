@@ -37,6 +37,10 @@ message DeviceState {
     // Level of device. Value should be disregarded
     // if device is offline.
     int32 level = 5;
+
+    // Color temperature of device. Value should be disregarded
+    // if device is offline.
+    int32 colorTemperature = 6;
 }
 
 message DevicesState {

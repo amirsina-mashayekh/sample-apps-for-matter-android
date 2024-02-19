@@ -80,8 +80,10 @@ data class DeviceUiModel(
   var isOnline: Boolean,
   // Whether the device is on or off.
   var isOn: Boolean,
-  // Brightness level of device
-  var level: Int = 0
+  // Level of device
+  var level: Int = 0,
+  // Color temperature of device
+  var colorTemperature: Int = 0,
 )
 
 /**
@@ -186,10 +188,10 @@ constructor(
       }
       if (state == null) {
         Timber.d("    deviceId setting default value for state")
-        devicesUiModel.add(DeviceUiModel(device, isOnline = false, isOn = false, level = 127))
+        devicesUiModel.add(DeviceUiModel(device, isOnline = false, isOn = false))
       } else {
         Timber.d("    deviceId setting its own value for state")
-        devicesUiModel.add(DeviceUiModel(device, state.online, state.on, state.level))
+        devicesUiModel.add(DeviceUiModel(device, state.online, state.on, state.level, state.colorTemperature))
       }
     }
     return devicesUiModel
@@ -338,7 +340,7 @@ constructor(
             .build()
         )
         Timber.d("Commissioning: Adding device state to repository: isOnline:true isOn:false")
-        devicesStateRepository.addDeviceState(deviceId, isOnline = true, isOn = false, level = 0)
+        devicesStateRepository.addDeviceState(deviceId, isOnline = true, isOn = false, level = 0, colorTemperature = 0)
       } catch (e: Exception) {
         val title = "Adding device to app's repository failed"
         val msg = "Adding device [${deviceId}] [${deviceName}] to app's repository failed."
@@ -407,7 +409,8 @@ constructor(
       Timber.d("Handling real device")
       clustersHelper.setOnOffDeviceStateOnOffCluster(deviceId, isOn, 1)
       val level = clustersHelper.getDeviceStateLevelControlCluster(deviceId, 1) ?: 0
-      devicesStateRepository.updateDeviceState(deviceId, true, isOn, level)
+      val colorTemperature = clustersHelper.getDeviceStateLevelControlCluster(deviceId, 1) ?: 0
+      devicesStateRepository.updateDeviceState(deviceId, true, isOn, level, colorTemperature)
     }
   }
 
@@ -457,6 +460,8 @@ constructor(
                 subscriptionHelper.extractAttribute(nodeState, 1, OnOffAttribute) as Boolean?
               val levelState =
                 subscriptionHelper.extractAttribute(nodeState, 1, LevelAttribute) as Int?
+              val colorTemperatureState =
+                subscriptionHelper.extractAttribute(nodeState, 1, LevelAttribute) as Int?
               Timber.d("onOffState [${onOffState}]")
               if (onOffState == null) {
                 Timber.e("onReport(): WARNING -> onOffState is NULL. Ignoring.")
@@ -466,12 +471,17 @@ constructor(
                 Timber.e("onReport(): WARNING -> levelState is NULL. Ignoring.")
                 return
               }
+              if (colorTemperatureState == null) {
+                Timber.e("onReport(): WARNING -> colorTemperatureState is NULL. Ignoring.")
+                return
+              }
               viewModelScope.launch {
                 devicesStateRepository.updateDeviceState(
                   device.deviceId,
                   isOnline = true,
                   isOn = onOffState,
                   level = levelState,
+                  colorTemperature = colorTemperatureState,
                 )
               }
             }
@@ -533,12 +543,14 @@ constructor(
           Timber.d("runDevicesPeriodicPing deviceId [${device.deviceId}]")
           var isOn = clustersHelper.getDeviceStateOnOffCluster(device.deviceId, 1)
           var level = clustersHelper.getDeviceStateLevelControlCluster(device.deviceId, 1)
+          var colorTemperature = clustersHelper.getColorTemperatureColorControlCluster(device.deviceId, 1)
           val isOnline: Boolean
-          if (isOn == null || level == null) {
+          if (isOn == null || level == null || colorTemperature == null) {
             Timber.e("runDevicesPeriodicUpdate: cannot get device state -> OFFLINE")
             isOn = false
             isOnline = false
             level = 0
+            colorTemperature = 0
           } else {
             isOnline = true
           }
@@ -549,6 +561,7 @@ constructor(
             isOnline = isOnline,
             isOn = isOn,
             level = level,
+            colorTemperature = colorTemperature,
           )
         }
         delay(PERIODIC_READ_INTERVAL_HOME_SCREEN_SECONDS * 1000L)

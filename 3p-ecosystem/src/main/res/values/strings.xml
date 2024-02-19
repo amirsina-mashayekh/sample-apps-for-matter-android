@@ -99,7 +99,7 @@ All of the information will be logged in logcat. Use this command  to only view 
     <string name="unspecified">Unspecified</string>
     <string name="error">Error</string>
     <string name="brightness">Brightness</string>
-    <string name="temperature">Temperature</string>
+    <string name="color_temperature">Color Temperature</string>
 
     <!-- Matter Beacon -->
     <string name="beacon_list_title" translatable="false">Scanning for nearby Matter devices…</string>

@@ -32,7 +32,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
@@ -171,6 +173,13 @@ internal fun DeviceRoute(
     }
   }
 
+  // Color Temperature value changed.
+  val onColorTemperatureChange: (value: Int) -> Unit = remember {
+    { value ->
+      deviceViewModel.updateDeviceStateColorTemperature(deviceUiModel!!, value)
+    }
+  }
+
   // Inspect button click handler.
   // isOnline must be provided in InspectScreen because it is updated there.
   val onInspect: (isOnline: Boolean) -> Unit = remember {
@@ -249,6 +258,7 @@ internal fun DeviceRoute(
     lastUpdatedDeviceState,
     onOnOffClick,
     onBrightnessChange,
+    onColorTemperatureChange,
     onRemoveDeviceClick,
     onShareDevice,
     onInspect,
@@ -268,6 +278,7 @@ private fun DeviceScreen(
   deviceState: DeviceState?,
   onOnOffClick: (value: Boolean) -> Unit,
   onBrightnessChange: (value: Int) -> Unit,
+  onColorTemperatureChange: (value: Int) -> Unit,
   onRemoveDeviceClick: () -> Unit,
   onShareDevice: () -> Unit,
   onInspect: (isOnline: Boolean) -> Unit,
@@ -288,6 +299,10 @@ private fun DeviceScreen(
   var isOnline by remember { mutableStateOf(false) }
   var isOn by remember { mutableStateOf(false) }
   var brightness by remember { mutableFloatStateOf(0f) }
+  var colorTemperature by remember { mutableFloatStateOf(0f) }
+
+  val brightnessMax = 254f
+  val colorTemperatureMax = 1667f
 
   if (deviceUiModel == null) {
     Text("Still loading the device information")
@@ -315,11 +330,19 @@ private fun DeviceScreen(
         }
       brightness =
         when (deviceState) {
-          null -> model.level / 254f
-          else -> deviceState.level / 254f
+          null -> model.level / brightnessMax
+          else -> deviceState.level / brightnessMax
+        }
+      colorTemperature =
+        when (deviceState) {
+          null -> model.colorTemperature / colorTemperatureMax
+          else -> deviceState.colorTemperature / colorTemperatureMax
         }
     }
-    Timber.d("deviceState: isOnline [$isOnline] isOn[$isOn]")
+    Timber.d(
+      "deviceState: isOnline [$isOnline] isOn[$isOn]" +
+              "level[$brightness] colorTemperature[$colorTemperature]"
+    )
   }
 
   // The various AlertDialog's that may pop up to inform the user of important information.
@@ -331,7 +354,12 @@ private fun DeviceScreen(
   )
 
   deviceUiModel.let { model ->
-    Column(modifier = Modifier.fillMaxWidth().padding(innerPadding)) {
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(innerPadding)
+        .verticalScroll(rememberScrollState())
+    ) {
       OnOffStateSection(isOnline, isOn) {
         onOnOffClick(it)
         model.isOn = it
@@ -346,6 +374,18 @@ private fun DeviceScreen(
           val brightnessVal = (brightness * 254).toInt()
           onBrightnessChange(brightnessVal)
           model.level = brightnessVal
+        }
+      )
+      LevelControl(
+        stringResource(R.string.color_temperature),
+        isOnline,
+        isOn,
+        colorTemperature,
+        { colorTemperature = it },
+        {
+          val colorTemperatureVal = (colorTemperature * colorTemperatureMax).toInt()
+          onColorTemperatureChange(colorTemperatureVal)
+          model.colorTemperature = colorTemperatureVal
         }
       )
       ShareSection(name = model.device.name, onShareDevice)
@@ -676,6 +716,10 @@ private fun DeviceScreenOnlineOnPreview() {
     { value ->
       Timber.d("deviceUiModel [$deviceUiModel] value [$value]")
     }
+  val onColorTemperatureChange: (value: Int) -> Unit =
+    { value ->
+      Timber.d("deviceUiModel [$deviceUiModel] value [$value]")
+    }
   MaterialTheme {
     DeviceScreen(
       PaddingValues(),
@@ -683,6 +727,7 @@ private fun DeviceScreenOnlineOnPreview() {
       deviceState,
       onOnOffClick,
       onBrightnessChange,
+      onColorTemperatureChange,
       {},
       {},
       {},

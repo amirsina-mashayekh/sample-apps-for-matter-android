@@ -57,7 +57,7 @@ class DevicesStateRepository @Inject constructor(@ApplicationContext context: Co
   val lastUpdatedDeviceState: LiveData<DeviceState>
     get() = _lastUpdatedDeviceState
 
-  suspend fun addDeviceState(deviceId: Long, isOnline: Boolean, isOn: Boolean, level: Int) {
+  suspend fun addDeviceState(deviceId: Long, isOnline: Boolean, isOn: Boolean, level: Int, colorTemperature: Int) {
     val newDeviceState =
         DeviceState.newBuilder()
             .setDeviceId(deviceId)
@@ -65,6 +65,7 @@ class DevicesStateRepository @Inject constructor(@ApplicationContext context: Co
             .setOnline(isOnline)
             .setOn(isOn)
             .setLevel(level)
+            .setColorTemperature(colorTemperature)
             .build()
 
     devicesStateDataStore.updateData { devicesState ->
@@ -73,7 +74,7 @@ class DevicesStateRepository @Inject constructor(@ApplicationContext context: Co
     _lastUpdatedDeviceState.value = newDeviceState
   }
 
-  suspend fun updateDeviceState(deviceId: Long, isOnline: Boolean, isOn: Boolean, level: Int) {
+  suspend fun updateDeviceState(deviceId: Long, isOnline: Boolean, isOn: Boolean, level: Int, colorTemperature: Int) {
     val newDeviceState =
         DeviceState.newBuilder()
             .setDeviceId(deviceId)
@@ -81,6 +82,7 @@ class DevicesStateRepository @Inject constructor(@ApplicationContext context: Co
             .setOnline(isOnline)
             .setOn(isOn)
             .setLevel(level)
+            .setColorTemperature(colorTemperature)
             .build()
 
     val devicesState = devicesStateFlow.first()
@@ -100,7 +102,7 @@ class DevicesStateRepository @Inject constructor(@ApplicationContext context: Co
     if (!updateDone) {
       Timber.w(
           "We did not find device [${deviceId}] in devicesStateRepository; it should have been there???")
-      addDeviceState(deviceId, isOnline = isOnline, isOn = isOn, level = level)
+      addDeviceState(deviceId, isOnline = isOnline, isOn = isOn, level = level, colorTemperature = colorTemperature)
     }
   }
 
